@@ -21,7 +21,7 @@ function [f, t] = PitchTimeAcf(x, iBlockLength, iHopLength, f_s)
     f               = zeros(1,iNumOfBlocks);
 
     %initialization
-    fMaxFreq        = 2000;
+    fMaxFreq        = 1000; %2000
     eta_min         = round(f_s/fMaxFreq);
 
     for (n = 1:iNumOfBlocks)

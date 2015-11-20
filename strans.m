@@ -1,46 +1,46 @@
 % Calculate features in batch.
 WIN_SIZE = 2048;
-HOP_SIZE = 512;
+HOP_SIZE = 256;
 MIN_F0 = 70;
-MAX_F0 = 900;
+MAX_F0 = 1000;
 WAV_DIR = '/highway/strans_621/waves';
 FEAT_DIR = '/highway/strans_621/train';
 
 FEATURES = {
-  'SpectralCentroid',
-  'SpectralCrest',
-  'SpectralDecrease',
-  'SpectralFlatness',
-  'SpectralFlux',
-  'SpectralKurtosis',
-  %%'SpectralMfccs',
-  %%%%%'SpectralPitchChroma',
-  'SpectralRolloff',
-  'SpectralSkewness',
-  'SpectralSlope',
-  'SpectralSpread',
-  'SpectralTonalPowerRatio',
+  'SpectralCentroid',    % 1
+  'SpectralCrest',       % 1
+  'SpectralDecrease',    % 1
+  'SpectralFlatness',    % 1
+  'SpectralFlux',        % 1
+  'SpectralKurtosis',    % 1
+  'SpectralMfccs',       % 13
+  %'SpectralPitchChroma', % 12
+  'SpectralRolloff',     % 1
+  'SpectralSkewness',    % 1
+  'SpectralSlope',       % 1
+  'SpectralSpread',      % 1
+  'SpectralTonalPowerRatio',   % 1
   %%%%%'TimeAcfCoeff',
   %%%%%'TimeMaxAcf',
-  'TimePeakEnvelope',
-  'TimePredictivityRatio',
-  'TimeRms',
-  'TimeStd',
+  'TimePeakEnvelope',    % 2
+  'TimePredictivityRatio',   % 1
+  'TimeRms',             % 1
+  'TimeStd',             % 1
   %%%%%'TimeZeroCrossingRate',
   
-  'PitchSpectralAcf',
-  'PitchSpectralHps',
-  'PitchTimeAcf',
-  'PitchTimeAmdf',
-  'PitchTimeAuditory',
-  'PitchTimeZeroCrossings',
+  'PitchSpectralAcf',    % 1
+  'PitchSpectralHps',    % 1
+  'PitchTimeAcf',        % 1
+  'PitchTimeAmdf',       % 1
+  'PitchTimeAuditory',   % 1
+  'PitchTimeZeroCrossings',    % 1
   
-  'NoveltyFlux',
-  'NoveltyLaroche',
-  'NoveltyHainsworth',
+  'NoveltyFlux',         % 1
+  'NoveltyLaroche',      % 1
+  'NoveltyHainsworth',   % 1
 
-  'YIN',  % de Cheveigne
-  'pitchflow',  % https://github.com/dpwe/pitchflow
+  'YIN',  % de Cheveigne  % 3
+  'pitchflow',  % https://github.com/dpwe/pitchflow   % 3
 };
 
 
@@ -48,6 +48,7 @@ addpath('./plugins/yin');
 addpath('./plugins/pitchflow');
 
 %%%%%%%%%%%%%%%%%%%%%
+stream_infos = [];
 wavfiles = dir([WAV_DIR '/*.wav']);
 for i = 1:length(wavfiles)
     wavfile = wavfiles(i);
@@ -75,7 +76,6 @@ for i = 1:length(wavfiles)
             p.sr = fs;
             r = yin(audiodata, p);
             v = [r.f0; r.ap; r.pwr];
-            v(isnan(v)) = 0;
         elseif strcmp(feat_name, 'pitchflow')
             p.t_win = WIN_SIZE / fs;
             p.t_hop = HOP_SIZE / fs;
@@ -105,6 +105,8 @@ for i = 1:length(wavfiles)
         else
             all_features = [all_features; v];
         end
+        this_stream_info = any(isnan(v), 2);
+        disp(this_stream_info);
     end
     
     % calculate delta and delta-delta
@@ -119,7 +121,13 @@ for i = 1:length(wavfiles)
     delta_delta_all_features(:,len) = (all_features(:,len)-all_features(:,len-1));
 
     all_features = [all_features;delta_all_features;delta_delta_all_features];
-    all_features(isnan(all_features)) = 0;
+    this_stream_infos = any(isnan(all_features), 2);
+    if i == 1
+        stream_infos = this_stream_infos;
+    else
+        stream_infos = stream_infos | this_stream_infos;
+    end
+    all_features(isnan(all_features)) = -1e+10;  % hts convention
     dims = size(all_features, 1);
     size(all_features)
     
@@ -140,4 +148,5 @@ for i = 1:length(wavfiles)
     system(cmd);
     %%break;
 end
-
+stream_infos
+dlmwrite([FEAT_DIR '/msdInfo'], stream_infos);

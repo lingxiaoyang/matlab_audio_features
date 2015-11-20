@@ -21,8 +21,8 @@ function [f, t] = PitchTimeAmdf(x, iBlockLength, iHopLength, f_s)
     f               = zeros(1,iNumOfBlocks);
 
     %initialization
-    f_max           = 2000;
-    f_min           = 50;
+    f_max           = 1000;%2000;
+    f_min           = 70;%50;
     eta_min         = round(f_s/f_max);
     eta_max         = round(f_s/f_min);
 

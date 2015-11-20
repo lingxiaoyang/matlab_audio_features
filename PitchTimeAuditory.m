@@ -21,7 +21,7 @@ function [f, t] = PitchTimeAuditory(x, iBlockLength, iHopLength, f_s)
     f               = zeros(1,iNumOfBlocks);
 
     %initialization
-    f_max           = 2000;
+    f_max           = 1000; %2000;
     eta_min         = round(f_s/f_max);
     iNumBands       = 20;
     fLengthLpInS    = 0.001;

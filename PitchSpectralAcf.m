@@ -11,7 +11,7 @@ function [f] = PitchSpectralAcf (X, f_s)
 
     % initialize
     iOrder  = 4;
-    f_min   = 300;
+    f_min   = 70;%300;
     
     eta_min = round(f_min/f_s * 2 * size(X,1));
 
